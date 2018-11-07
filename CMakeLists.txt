@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project (GPU_KCF)
 
+#opencv should be re-built with OPENCL, VA and VA_Intel 
 set(OPENCV_INCLUDE /home/iotg-video/source_code/opencv/build/include)
 set(OPENCV_LIB /home/iotg-video/source_code/opencv/build/lib)
 
