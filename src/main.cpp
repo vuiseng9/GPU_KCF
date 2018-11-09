@@ -86,6 +86,7 @@ cv::Rect GetRoi()
 	return roi;
 }
 
+
 int main(int argc, char* argv[])
 {
         GetInput();
@@ -93,15 +94,29 @@ int main(int argc, char* argv[])
 	KCFTracker* tracking = new KCFTracker();
 	if (files.size()!=0)
 	{
-            UMat orig_image = imread(files[0]).getUMat( ACCESS_READ );
+            Mat orig_image = imread(files[0]);
+            UMat gpu_image= orig_image.getUMat( ACCESS_READ );
 	    cv::Rect roi = GetRoi();
-	    tracking->init(roi, orig_image);
+	    tracking->init(roi, gpu_image);
 	
+            rectangle(orig_image, Point(roi.x, roi.y), Point(roi.x + roi.width, roi.y + roi.height), Scalar(0, 255, 255), 1, 8);
+	    //cv::namedWindow("KCF_GPU", cv::WINDOW_AUTOSIZE);
+	    //cv::imshow("KCF_GPU", orig_image);
+            //cv::waitKey(0);
+
 	    for (std::vector<string>::iterator it=files.begin()+1; it!=files.end(); ++it)
 	    {
                 cout<<*it<<endl;
-                orig_image = imread(*it).getUMat( ACCESS_READ );
-		tracking->update(orig_image);
+                orig_image= imread(*it);
+                gpu_image = orig_image.getUMat( ACCESS_READ );
+		cv::Rect res= tracking->update(gpu_image);
+                //cout<<res.x <<" "<<res.y<<" "<<res.width<<" "<<res.height<<endl;
+                rectangle(orig_image, Point(res.x, res.y), Point(res.x + res.width, res.y + res.height), Scalar(0, 255, 255), 1, 8);
+		cv::namedWindow("KCF_GPU", cv::WINDOW_AUTOSIZE);
+		cv::imshow("KCF_GPU", orig_image);
+                char c = (char)cv::waitKey(0);
+                if(c==27)
+                   break;
 	    }
         
         }
