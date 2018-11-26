@@ -17,7 +17,7 @@
 using namespace std;
 using namespace cv;
 
-static string FileFolder = "../test_data/traffic";
+static string FileFolder = "../test_data/girl";
 static std::vector<std::string> files;
 
 bool GetInput()
