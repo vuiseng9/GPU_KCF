@@ -17,7 +17,7 @@
 using namespace std;
 using namespace cv;
 
-static string FileFolder = "../test_data/girl";
+static string FileFolder = "../test_data/traffic";
 static std::vector<std::string> files;
 
 bool GetInput()
@@ -95,6 +95,11 @@ int main(int argc, char* argv[])
 	if (files.size()!=0)
 	{
             Mat orig_image = imread(files[0]);
+            if( (orig_image.rows %4 != 0) || (orig_image.cols %4 !=0 ))
+            {   
+                 Size aligned_size((orig_image.cols/4)*4,(orig_image.rows/4)*4);
+                 resize(orig_image, orig_image , aligned_size);
+            }
             UMat gpu_image= orig_image.getUMat( ACCESS_READ );
 	    cv::Rect roi = GetRoi();
 	    tracking->init(roi, gpu_image);
@@ -108,6 +113,11 @@ int main(int argc, char* argv[])
 	    {
                 cout<<*it<<endl;
                 orig_image= imread(*it);
+                if( (orig_image.rows %4 != 0) || (orig_image.cols %4 !=0 ))
+                {   
+                   Size aligned_size((orig_image.cols/4)*4,(orig_image.rows/4)*4);
+                   resize(orig_image, orig_image , aligned_size);
+                }
                 gpu_image = orig_image.getUMat( ACCESS_READ );
 		cv::Rect res= tracking->update(gpu_image);
                 //cout<<res.x <<" "<<res.y<<" "<<res.width<<" "<<res.height<<endl;
