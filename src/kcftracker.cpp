@@ -137,6 +137,9 @@ KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab)
          cv::va_intel::ocl::initializeContextFromVA(va::display, true);
     }
 
+    m_vaSurfaceID = -1;
+    m_inputWidth  = 0;
+    m_inputHeight = 0;
     //Initialize MDF kernel
     initMDF();
 }
@@ -150,37 +153,52 @@ KCFTracker::~KCFTracker()
 // Initialize tracker 
 void KCFTracker::init(const cv::Rect &roi, cv::UMat image)
 {
-    VASurfaceID vaSurfaceID;
+    //VASurfaceID vaSurfaceID;
     VAStatus status;
   
     cv::Size size2 = image.size();
-    status = vaCreateSurfaces(va::display, VA_RT_FORMAT_YUV420, size2.width, size2.height, &vaSurfaceID, 1, NULL, 0);
+    if(m_vaSurfaceID == -1 || ( (m_inputWidth != size2.width) &&(m_inputHeight != size2.height))){
+       if(m_vaSurfaceID > 0){
+         vaDestroySurfaces(va::display, &m_vaSurfaceID,1);
+       }
+       status = vaCreateSurfaces(va::display, VA_RT_FORMAT_YUV420, size2.width, size2.height, &m_vaSurfaceID, 1, NULL, 0);
+       m_inputWidth = size2.width;
+       m_inputHeight = size2.height;
+    } 
     //CHECK_VASTATUS(status, "vaCreateSurfaces");
-    cv::va_intel::convertToVASurface(va::display, image, vaSurfaceID, size2); 
+    cv::va_intel::convertToVASurface(va::display, image, m_vaSurfaceID, size2); 
+     
 
     _roi = roi;
     assert(roi.width >= 0 && roi.height >= 0);
 
     int width=image.cols;
     int height=image.rows;
-    _tmpl = getFeatures(vaSurfaceID, 1, 1.0f, width, height);
+    _tmpl = getFeatures(m_vaSurfaceID, 1, 1.0f, width, height);
     _prob = createGaussianPeak(size_patch[0], size_patch[1]);
     _alphaf = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
     train(_tmpl, 1.0); // train with initial frame
   
-    vaDestroySurfaces(va::display, &vaSurfaceID,1);
+    //vaDestroySurfaces(va::display, &vaSurfaceID,1);
     
  }
 // Update position based on the new frame
 cv::Rect KCFTracker::update(cv::UMat image)
 {
-    VASurfaceID vaSurfaceID;
+    //VASurfaceID vaSurfaceID;
     VAStatus status;
   
     cv::Size size2 = image.size();
-    status = vaCreateSurfaces(va::display, VA_RT_FORMAT_YUV420, size2.width, size2.height, &vaSurfaceID, 1, NULL, 0);
+    if(m_vaSurfaceID == -1 || ( (m_inputWidth != size2.width) &&(m_inputHeight != size2.height))){
+       if(m_vaSurfaceID > 0){
+         vaDestroySurfaces(va::display, &m_vaSurfaceID,1);
+       }
+       status = vaCreateSurfaces(va::display, VA_RT_FORMAT_YUV420, size2.width, size2.height, &m_vaSurfaceID, 1, NULL, 0);
+       m_inputWidth = size2.width;
+       m_inputHeight = size2.height;
+    } 
     //CHECK_VASTATUS(status, "vaCreateSurfaces");
-    cv::va_intel::convertToVASurface(va::display, image, vaSurfaceID, size2); 
+    cv::va_intel::convertToVASurface(va::display, image, m_vaSurfaceID, size2); 
 
     int width=image.cols;
     int height=image.rows;
@@ -201,7 +219,7 @@ cv::Rect KCFTracker::update(cv::UMat image)
 
     float peak_value;
     //Test at a original size
-    cv::Point2f res = detect(_tmpl, getFeatures(vaSurfaceID, 0, 1.0f, width, height), peak_value);
+    cv::Point2f res = detect(_tmpl, getFeatures(m_vaSurfaceID, 0, 1.0f, width, height), peak_value);
 
     /*if (scale_step != 1) {
         // Test at a smaller _scale
@@ -238,7 +256,7 @@ cv::Rect KCFTracker::update(cv::UMat image)
     if (_roi.x + _roi.width <= 0)  _roi.x = -_roi.width + 2;
     if (_roi.y + _roi.height <= 0) _roi.y = -_roi.height + 2;
     assert(_roi.width >= 0 && _roi.height >= 0);
-    cv::Mat x = getFeatures(vaSurfaceID, 0, 1.0f, width, height);
+    cv::Mat x = getFeatures(m_vaSurfaceID, 0, 1.0f, width, height);
 
     tmEnd = std::chrono::high_resolution_clock::now();
     diffTime  = tmEnd   - tmStart;
@@ -251,7 +269,7 @@ cv::Rect KCFTracker::update(cv::UMat image)
     diffTime  = tmEnd   - tmStart;
     //    std::cout<< "  Update 2nd part  takes: :" << diffTime.count()*1000 <<"(ms)"<<std::endl;
 
-    vaDestroySurfaces(va::display, &vaSurfaceID,1);    
+    //vaDestroySurfaces(va::display, &vaSurfaceID,1);    
     
     return _roi;
 }

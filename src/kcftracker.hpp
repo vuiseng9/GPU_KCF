@@ -316,6 +316,8 @@ private:
     CmTask*    pKernelArray;
     CmTask *pKernelArrayGetFeatures;        
 
-
+    VASurfaceID m_vaSurfaceID; 
+    unsigned short m_inputWidth;
+    unsigned short m_inputHeight;
 
 };
