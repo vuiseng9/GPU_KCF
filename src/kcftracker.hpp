@@ -179,7 +179,7 @@ public:
 
    //Global resource for MDF
    static CmDevice* pCmDev;
-   static void * pCLDev;
+   //static void * pCLDev;
 
 protected:
     // Detect object in the current frame.
