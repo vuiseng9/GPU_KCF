@@ -20,3 +20,9 @@ KCF acceleration with Intel GPU
 
 
 
+
+## Reproducible Environment
+1. Setup docker image as described [here.](https://github.com/vuiseng9/learning-mdf)
+2. build OpenCV with ```cmake .. -DWITH_VA_INTEL=ON -DWITH_QT=ON```
+3. clone and build this repo
+
