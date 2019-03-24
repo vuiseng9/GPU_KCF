@@ -89,8 +89,9 @@ the use of this software, even if advised of the possibility of such damage.
 #endif
 #include <chrono>
 #include <va/va.h>
-#include <opencv/highgui.h>
-#include <opencv/cv.h>
+//#include <opencv/highgui.h>
+#include <opencv2/highgui/highgui_c.h>
+//#include <opencv/cv.h>
 #include "fhog.hpp"
 #include "opencv2/imgproc/imgproc_c.h"
 #include "intelscalartbl.h"

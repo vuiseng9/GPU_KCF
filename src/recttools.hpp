@@ -35,7 +35,9 @@ the use of this software, even if advised of the possibility of such damage.
 
 #pragma once
 
-#include <opencv/cv.h>
+//#include <opencv/cv.h>
+#include <opencv2/highgui/highgui_c.h>
+
 #include <math.h>
 
 #ifndef _OPENCV_RECTTOOLS_HPP_

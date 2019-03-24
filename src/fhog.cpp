@@ -59,8 +59,9 @@ using namespace std;
 #include "tbb/parallel_for.h"
 #include "tbb/blocked_range.h"
 #endif
-#include <opencv/highgui.h>
-#include <opencv/cv.h>
+//#include <opencv/highgui.h>
+#include <opencv2/highgui/highgui_c.h>
+//#include <opencv/cv.h>
 #ifndef max
 #define max(a,b)            (((a) > (b)) ? (a) : (b))
 #endif
