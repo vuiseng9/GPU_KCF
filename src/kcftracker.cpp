@@ -186,6 +186,10 @@ void KCFTracker::init(const cv::Rect &roi, cv::UMat image)
 // Update position based on the new frame
 cv::Rect KCFTracker::update(cv::UMat image)
 {
+    elapsed_time duration;
+    ms duration_ms;
+
+    auto t0 = Time::now();
     //VASurfaceID vaSurfaceID;
     VAStatus status;
   
@@ -204,11 +208,11 @@ cv::Rect KCFTracker::update(cv::UMat image)
     int width=image.cols;
     int height=image.rows;
 
-    std::chrono::high_resolution_clock::time_point tmStart;
-    std::chrono::high_resolution_clock::time_point tmEnd;
-    chrono::duration<double> diffTime;
+//    std::chrono::high_resolution_clock::time_point tmStart;
+//    std::chrono::high_resolution_clock::time_point tmEnd;
+//    chrono::duration<double> diffTime;
 
-    tmStart = std::chrono::high_resolution_clock::now();
+//    tmStart = std::chrono::high_resolution_clock::now();
 
     if (_roi.x + _roi.width <= 0) _roi.x = -_roi.width + 1;
     if (_roi.y + _roi.height <= 0) _roi.y = -_roi.height + 1;
@@ -220,8 +224,29 @@ cv::Rect KCFTracker::update(cv::UMat image)
 
     float peak_value;
     //Test at a original size
-    cv::Point2f res = detect(_tmpl, getFeatures(m_vaSurfaceID, 0, 1.0f, width, height), peak_value);
 
+    auto t1 = Time::now();
+    duration = t1 - t0;
+    duration_ms = std::chrono::duration_cast<ms>(duration);
+    preprocess_perf.register_val(duration_ms.count());
+
+    t0 = Time::now();
+
+    cv::Mat FeatMap_det = getFeatures(m_vaSurfaceID, 0, 1.0f, width, height);
+
+    t1 = Time::now();
+    duration = t1 - t0;
+    duration_ms = std::chrono::duration_cast<ms>(duration);
+    feat_ext_perf.register_val(duration_ms.count());
+
+    t0 = Time::now();
+
+    cv::Point2f res = detect(_tmpl, FeatMap_det, peak_value);
+
+    t1 = Time::now();
+    duration = t1 - t0;
+    duration_ms = std::chrono::duration_cast<ms>(duration);
+    det_perf.register_val(duration_ms.count());
     /*if (scale_step != 1) {
         // Test at a smaller _scale
         float new_peak_value;
@@ -257,18 +282,34 @@ cv::Rect KCFTracker::update(cv::UMat image)
     if (_roi.x + _roi.width <= 0)  _roi.x = -_roi.width + 2;
     if (_roi.y + _roi.height <= 0) _roi.y = -_roi.height + 2;
     assert(_roi.width >= 0 && _roi.height >= 0);
+
+    t0 = Time::now();
+
     cv::Mat x = getFeatures(m_vaSurfaceID, 0, 1.0f, width, height);
 
-    tmEnd = std::chrono::high_resolution_clock::now();
-    diffTime  = tmEnd   - tmStart;
-   // std::cout<< "  Update 1st part  takes: :" << diffTime.count()*1000 <<"(ms)"<<std::endl;
+    t1 = Time::now();
+    duration = t1 - t0;
+    duration_ms = std::chrono::duration_cast<ms>(duration);
+    feat_ext_train_perf.register_val(duration_ms.count());
+
+//    tmEnd = std::chrono::high_resolution_clock::now();
+//    diffTime  = tmEnd   - tmStart;
+//   // std::cout<< "  Update 1st part  takes: :" << diffTime.count()*1000 <<"(ms)"<<std::endl;
         
-    tmStart = std::chrono::high_resolution_clock::now();
+//    tmStart = std::chrono::high_resolution_clock::now();
+
+    t0 = Time::now();
 
     train(x, interp_factor);
-    tmEnd = std::chrono::high_resolution_clock::now();
-    diffTime  = tmEnd   - tmStart;
-    //    std::cout<< "  Update 2nd part  takes: :" << diffTime.count()*1000 <<"(ms)"<<std::endl;
+
+    t1 = Time::now();
+    duration = t1 - t0;
+    duration_ms = std::chrono::duration_cast<ms>(duration);
+    train_perf.register_val(duration_ms.count());
+
+//    tmEnd = std::chrono::high_resolution_clock::now();
+//    diffTime  = tmEnd   - tmStart;
+//    //    std::cout<< "  Update 2nd part  takes: :" << diffTime.count()*1000 <<"(ms)"<<std::endl;
 
     //vaDestroySurfaces(va::display, &vaSurfaceID,1);    
     
@@ -280,9 +321,13 @@ cv::Rect KCFTracker::update(cv::UMat image)
 cv::Point2f KCFTracker::detect(cv::Mat z, cv::Mat x, float &peak_value)
 {
     using namespace FFTTools;
-    std::chrono::high_resolution_clock::time_point tmStart;
-    std::chrono::high_resolution_clock::time_point tmEnd;
-    tmStart = std::chrono::high_resolution_clock::now();
+//    std::chrono::high_resolution_clock::time_point tmStart;
+//    std::chrono::high_resolution_clock::time_point tmEnd;
+//    tmStart = std::chrono::high_resolution_clock::now();
+
+//    elapsed_time duration;
+//    ms duration_ms;
+//    auto t0 = Time::now();
 
     cv::Mat k = gaussianCorrelation_gpu(x, z);
     cv::Mat res = (real(fftd(complexMultiplication(_alphaf, fftd(k)), true)));
@@ -306,9 +351,15 @@ cv::Point2f KCFTracker::detect(cv::Mat z, cv::Mat x, float &peak_value)
 
     p.x -= (res.cols) / 2;
     p.y -= (res.rows) / 2;
-    tmEnd = std::chrono::high_resolution_clock::now();
-    chrono::duration<double> diffTime  = tmEnd   - tmStart;
-    //std::cout<< "  >detect takes:" << diffTime.count()*1000 <<"(ms)"<<std::endl;
+
+//    auto t1 = Time::now();
+//    duration = t1 - t0;
+//    duration_ms = std::chrono::duration_cast<ms>(duration);
+//    gauss_corr_perf.register_val(duration_ms.count());
+
+//    tmEnd = std::chrono::high_resolution_clock::now();
+//    chrono::duration<double> diffTime  = tmEnd   - tmStart;
+//    std::cout<< "  >detect takes:" << diffTime.count()*1000 <<"(ms)"<<std::endl;
 
     return p;
 }
@@ -317,9 +368,9 @@ cv::Point2f KCFTracker::detect(cv::Mat z, cv::Mat x, float &peak_value)
 void KCFTracker::train(cv::Mat x, float train_interp_factor)
 {
     using namespace FFTTools;
-    std::chrono::high_resolution_clock::time_point tmStart;
-    std::chrono::high_resolution_clock::time_point tmEnd;
-    tmStart = std::chrono::high_resolution_clock::now();
+//    std::chrono::high_resolution_clock::time_point tmStart;
+//    std::chrono::high_resolution_clock::time_point tmEnd;
+//    tmStart = std::chrono::high_resolution_clock::now();
 
     cv::Mat k = gaussianCorrelation_gpu(x, x);
     cv::Mat alphaf = complexDivision(_prob, (fftd(k) + lambda));
@@ -383,9 +434,9 @@ extern int gpu_gaussianCorrelation(unsigned char* InputBuffer0, unsigned char *I
 
 cv::Mat KCFTracker::gaussianCorrelation_gpu(cv::Mat x1, cv::Mat x2)
 {
-     std::chrono::high_resolution_clock::time_point tmStart;
-     std::chrono::high_resolution_clock::time_point tmEnd;
-     chrono::duration<double> diffTime;
+//     std::chrono::high_resolution_clock::time_point tmStart;
+//     std::chrono::high_resolution_clock::time_point tmEnd;
+//     chrono::duration<double> diffTime;
      
 
     cv::Mat k = cv::Mat( cv::Size(size_patch[1], size_patch[0]), CV_32F, cv::Scalar(0) );
@@ -394,15 +445,15 @@ cv::Mat KCFTracker::gaussianCorrelation_gpu(cv::Mat x1, cv::Mat x2)
 	unsigned char * pX2  = x2.data;
 	unsigned char * pDst = k.data;
 
-    	tmStart = std::chrono::high_resolution_clock::now();
+//    tmStart = std::chrono::high_resolution_clock::now();
 	for (int i = 0; i < 1; i++)
 	{
 	    gpu_gaussianCorrelation(pX1, pX2, x1.cols, x1.rows, 1, size_patch[1], size_patch[0], size_patch[2], pDst);
 	}
 
 	//printf("tt = %d\n", tt);
-    tmEnd = std::chrono::high_resolution_clock::now();
-    diffTime  = tmEnd   - tmStart;
+//    tmEnd = std::chrono::high_resolution_clock::now();
+//    diffTime  = tmEnd   - tmStart;
     //std::cout<< "  >gaussianCorrelation_gpu takes:" << diffTime.count()*1000 <<"(ms)"<<std::endl;
 
     return k;
@@ -434,10 +485,10 @@ cv::Mat KCFTracker::createGaussianPeak(int sizey, int sizex)
 cv::Mat KCFTracker::getFeatures(unsigned int vaSurfaceID, bool inithann, float scale_adjust, int rawWidth, int rawHeight)
 {
 
-    std::chrono::high_resolution_clock::time_point tmStart;
-    std::chrono::high_resolution_clock::time_point tmEnd;
-    chrono::duration<double> diffTime;
-    tmStart = std::chrono::high_resolution_clock::now();
+//    std::chrono::high_resolution_clock::time_point tmStart;
+//    std::chrono::high_resolution_clock::time_point tmEnd;
+//    chrono::duration<double> diffTime;
+//    tmStart = std::chrono::high_resolution_clock::now();
 
     cv::Rect extracted_roi;
 
@@ -498,9 +549,9 @@ cv::Mat KCFTracker::getFeatures(unsigned int vaSurfaceID, bool inithann, float s
     }
    
     FeaturesMap = hann.mul(FeaturesMap);
-    tmEnd = std::chrono::high_resolution_clock::now();
-    diffTime  = tmEnd   - tmStart;
-   // std::cout<< "  >GetFeatures takes:" << diffTime.count()*1000 <<"(ms)"<<std::endl;
+//    tmEnd = std::chrono::high_resolution_clock::now();
+//    diffTime  = tmEnd   - tmStart;
+//    std::cout<< "  >GetFeatures takes:" << diffTime.count()*1000 <<"(ms)"<<std::endl;
 
     return FeaturesMap;
 }

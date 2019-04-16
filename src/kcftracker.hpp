@@ -95,7 +95,7 @@ the use of this software, even if advised of the possibility of such damage.
 #endif
 #include "SetupSurface.h"
 #include "fhog.hpp"
-
+#include "profiler.hpp"
 
 #ifndef _OPENCV_KCFTRACKER_HPP_
 #define _OPENCV_KCFTRACKER_HPP_
@@ -158,7 +158,7 @@ class KCFTracker : public Tracker
 {
 public:
     // Constructor
-    KCFTracker(bool hog = true, bool fixed_window = true, bool multiscale = true, bool lab = true);
+    KCFTracker(bool hog = true, bool fixed_window = true, bool multiscale = false, bool lab = true);
     ~KCFTracker();
     // Initialize tracker 
     virtual void init(const cv::Rect &roi, cv::UMat image);
@@ -180,7 +180,11 @@ public:
    //Global resource for MDF
    static CmDevice* pCmDev;
    //static void * pCLDev;
-
+   profiler preprocess_perf;
+   profiler feat_ext_perf;
+   profiler det_perf;
+   profiler feat_ext_train_perf;
+   profiler train_perf;
 protected:
     // Detect object in the current frame.
     cv::Point2f detect(cv::Mat z, cv::Mat x, float &peak_value);
